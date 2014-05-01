@@ -1,0 +1,15 @@
+{
+  "name": "webRTCWalkthrough",
+  "version": "0.0.0",
+  "description": "A webRTC experiment",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "webRTC",
+    "p2p"
+  ],
+  "author": "Pascal Pflaum",
+  "license": "BSD-2-Clause"
+}
