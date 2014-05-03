@@ -32,40 +32,48 @@ var sslOptions = {
 var io = require('socket.io').listen(require('https').createServer(sslOptions, app).listen(HTTP_PORT));
 
 //a new client connected
-io.sockets.on('connection', function (socket) {
-	
+io.sockets.on('connection', function(socket) {
+
+	//we want to store the users current room by our self. Hacking around the socket.io roomsystem to figure out this information is exhausting.
+	var currentRoom;
+
+
 	//the user wants to join a room
 	socket.on('joinRoom', function(roomName, otherClientsCallback) {
-		
+
 		//get a list of clients in the room before joining the room, because we want to have the list without this client
 		var otherSockets = io.sockets.clients(roomName).map(function(otherSocket) {
 			return otherSocket.id;
 		});
-		
+
 		//Join the room
 		socket.join(roomName);
-		
+
+		//and store it as the users room
+		currentRoom = roomName;
+
 		//And make aware the other clients, that a new person joined
 		socket.broadcast.to(roomName).emit('clientJoinedRoom', socket.id);
-		
+
 		//give the fresh joined client the list of connected clients
 		otherClientsCallback(otherSockets);
 	});
-	
-	
+
+
 	/*
 	 * the user is leaving a room and we need to inform all users in that room
 	 */
 	function leaveRoom() {
-		
-		//iterate over all connected rooms - even, if it is just one, this is afaik the easiest way
-		for (var roomName in io.sockets.manager.roomClients[socket.id]) {
-			
-			//leave and tell the other users - leaving is not neccessary during disconnect, but doesn't cause any harm
-			socket.leave(roomName).broadcast.to(roomName).emit('clientLeftRoom', socket.id);
-		};
+
+		console.log('leavingRoom:' + currentRoom);
+
+		//leave and tell the other users - leaving is not neccessary during disconnect, but doesn't cause any harm
+		socket.leave(currentRoom).broadcast.to(currentRoom).emit('clientLeftRoom', socket.id);
+
+		//mark that the user is in no room at the moment
+		currentRoom = undefined;
 	}
-	
+
 	//the user can leave a room by command or by disconnect
 	socket.on('leaveRoom', leaveRoom).on('disconnect', leaveRoom);
 });

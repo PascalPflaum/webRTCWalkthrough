@@ -18,7 +18,10 @@
 	var USER_MEDIA_SETTINGS = {video : true, audio : true};
 
 	//socket.io options
-	var SOCKET_SETTINGS = {HOST : 'https://localhost', OPTIONS : {port : 443, secure : true}};
+	var SOCKET_SETTINGS = {
+		HOST : location.protocol + '//' + location.hostname,
+		OPTIONS : {port : 443, secure : true}
+	};
 
 	//we will have only one room in step 2
 	var ROOM_NAME = 'step2DemoRoom';
@@ -26,7 +29,12 @@
 	//unify the nonStandard methods
 	//PITFALL: dont try to store this in a local variable, you will get an error
 	navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
+	
+	
+	
+	//display a loader for the local user, the local user is threaded like any other user at this step
+	onClientJoinedRoom('local');
+	
 	//get access to the users media device- to avoid spaghetti here callbacks are moved to a declared function
 	navigator.getUserMedia(USER_MEDIA_SETTINGS, onGetUserMediaSuccess, displayError);
 
@@ -38,7 +46,7 @@
 	function onGetUserMediaSuccess(localMediaStream) {
 
 		//create a video object and connect it to the local camera
-		$clients.find('.local .loader').replaceWith('<video src="' + window.URL.createObjectURL(localMediaStream) + '"></video>');
+		$clients.find('.local .loader').replaceWith('<video muted autoplay><source src="' + window.URL.createObjectURL(localMediaStream) + '"></source></video>');
 
 		//connect to the signaling server
 		var socket = io.connect(SOCKET_SETTINGS.HOST, SOCKET_SETTINGS.OPTIONS);
@@ -82,8 +90,5 @@
 	function displayError(err) {
 		console.error(err);
 	}
-
-	//display a loader for the local user, the local user is threaded like any other user at this step
-	onClientJoinedRoom('local');
 
 })();

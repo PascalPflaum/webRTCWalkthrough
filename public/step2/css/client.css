@@ -28,5 +28,4 @@ and the video element inside it
 .clientTile > video {
 	width: 400px;
 	height: 250px;
-	object-fit: cover;
 }
