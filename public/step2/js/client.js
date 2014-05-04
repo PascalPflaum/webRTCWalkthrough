@@ -4,7 +4,7 @@
  * -------------------------
  * display a text info while loading
  * Connect to signaling service, join a fixed room and render a tile with a loader for each user in the room
- * Updated the user tiles for leaving and joining users in realtime
+ * Updated the tiles for joining and leaving users in realtime
  */
 
 

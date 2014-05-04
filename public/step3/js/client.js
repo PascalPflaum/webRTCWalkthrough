@@ -2,11 +2,11 @@
  * This is CLIENT Part 3 of the WebRTC Walkthorugh
  * The goal of this part:
  * -------------------------
- * create an peer to peer offer
+ * create an peer to peer offer for each client in the room, when joining
  * send this offer to the server
  * create and resends an answer, when an offer is recieved
- * listending on answers for outgoing messages
- 
+ * listen on offers from joining clients
+  * -------------------------
  */
 
 
@@ -42,7 +42,6 @@
 	//unify the nonStandard methods
 	var PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 	var SessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
-	var IceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.RTCIceCandidate;
 
 	//PITFALL: dont try to store this in a local variable, you will get an error
 	navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
