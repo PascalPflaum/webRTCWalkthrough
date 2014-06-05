@@ -25,8 +25,8 @@
 		OPTIONS : {port : 443, secure : true}
 	};
 
-	//we will have only one room in step 3
-	var ROOM_NAME = 'step3DemoRoom';
+	//we will have only one room in step 4
+	var ROOM_NAME = 'step4DemoRoom';
 
 	//all peer connections share the same servers and settings
 	var PEER_CONNECTION_CONFIG = {

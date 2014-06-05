@@ -2,20 +2,32 @@
  * This is SERVER Part 4 of the WebRTC Walkthorugh
  * The goal of this part:
  * -------------------------
- * change the offer & answer process to work in a callback way
- * Exchanging of ice candidates
- * Getting a working video
+ * adding TURN
  * -------------------------
  * You can start the server with "node step3.js" and goto "https://localhost" in your browser
  */
 
 //some config you maybe want to change
 var HTTP_PORT = 443;
-var DOCUMENT_ROOT = __dirname + '/public/step4';
+var DOCUMENT_ROOT = __dirname + '/public/step5';
+
+var STUN_SERVER =
+		[
+			{url : 'stun:185.21.103.236:3478'}
+		];
+
+var TURN_SERVER = [
+	{
+		url : 'turn:185.21.103.236:3478',
+		secret : 'turnserversharedsecret',
+		expiry : 86400
+	}
+];
 
 //load custom modules
 var fs = require('fs');
 var express = require('express');
+var crypto = require('crypto');
 
 //create express app and deliver static files
 var app = express();
@@ -35,19 +47,42 @@ io.configure(function() {
 	io.set('log level', 2);
 });
 
+function getServers(userId) {
+	return {
+		iceServers : STUN_SERVER.concat(TURN_SERVER.map(setupTurn))
+	};
+
+	function setupTurn(turnServer) {
+
+		var hmac = crypto.createHmac('sha1', turnServer.secret);
+
+		// default to 86400 seconds timeout unless specified
+		var username = Math.floor(new Date().getTime() / 1000) + (turnServer.expiry || 86400) + ':' + userId;
+		hmac.update(username);
+		return {
+			username : username,
+			credential : hmac.digest('base64'),
+			url : turnServer.url
+		};
+	}
+}
+
+
 //a new client connected
 io.sockets.on('connection', function(socket) {
 
 	//we want to store the users current room by our self. Hacking around the socket.io roomsystem to figure out this information is exhausting.
 	var currentRoom;
 
+//	socket.emit('init', getServers());
+
 
 	/**
 	 * the user requests to join a room
 	 * @param {string} roomName
-	 * @param {function} otherClientsCallback
+	 * @param {function} joinRoomCallback
 	 */
-	function onJoinRoom(roomName, otherClientsCallback) {
+	function onJoinRoom(roomName, joinRoomCallback) {
 
 		//get a list of clients in the room before joining the room, because we want to have the list without ourself
 		var currentSocketsInRoom = io.sockets.clients(roomName).map(function(otherSocket) {
@@ -67,7 +102,7 @@ io.sockets.on('connection', function(socket) {
 		listenForEventsWhileUserIsInARoom();
 
 		//give the fresh joined client the list of connected clients
-		otherClientsCallback(currentSocketsInRoom);
+		joinRoomCallback(getServers(socket.id), currentSocketsInRoom);
 	}
 
 
@@ -79,21 +114,18 @@ io.sockets.on('connection', function(socket) {
 	 */
 	function onOffer(targetId, offer, answerCallback) {
 
-		//get the room the client is in
-		console.log('RTC offer for room ' + currentRoom + ' and client ' + targetId);
-
 		//PITFALL: this looks nice, but doesn't work - the answerCallback will be undefined in the client
 		//io.sockets.sockets[targetId].emit('offer', socket.id, offer, answerCallback);
-		
+
 		//@todo verify that this user is really in the room
 		io.sockets.sockets[targetId].emit('offer', socket.id, offer, function(answer) {
 			answerCallback(answer);
 		});
 	}
-	
-	
+
+
 	function onCandidate(targetId, candidate) {
-		
+
 		//@todo verify that this user is really in the room
 		io.sockets.sockets[targetId].emit('candidate', socket.id, candidate);
 	}
